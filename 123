@@ -1,0 +1,1432 @@
+--========================================================
+-- ADMIN CODE SYSTEM
+-- Redeem Code / Admin GUI / /taocode / DISCORD API
+--========================================================
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+
+--========================================================
+-- DISCORD API CONFIG
+--========================================================
+
+-- URL API của server Discord Bot
+local DiscordCodeAPI = "https://𝐕𝐢𝐞𝐭𝐧𝐚𝐦 𝐏𝐯𝐏 𝐓𝐫𝐚𝐢𝐧𝐢𝐧𝐠 𝐂𝐢𝐭𝐲 | 𝟐𝟎𝟐𝟔.com/api/codes"
+
+-- API Key bảo vệ API
+local DiscordAPIKey = "Drakerdepzai"
+
+-- Thời gian Roblox kiểm tra code Discord
+local DiscordPollSeconds = 10
+
+--========================================================
+-- DISCORD BOT TOKEN
+--========================================================
+-- QUAN TRỌNG:
+-- Token thật của Bot Discord KHÔNG đặt vào Roblox.
+-- Token thật phải đặt trong DiscordCodeBot.py.
+--
+-- Dòng này chỉ để đánh dấu nơi cấu hình.
+local DiscordToken = "MTU0NDY0MzEzMjMwMDIwNjA4MA.GpVHCV.-JUvQUzc1WhWP9XnZ_ztoCvi-QqiS1EnZb50lU"
+
+-- Discord Admin
+-- Đây chỉ là danh sách tham khảo phía Roblox.
+-- Quyền Discord thực tế nên kiểm tra ở Bot.
+local DiscordAdmins = {
+	["kietdoan0244_99006"] = true,
+	["meobasanvcl"] = true,
+  ["teddyontop_"] = true,
+  ["zen_pony_90310"] = true,
+  ["taichodien363636"] = true,
+}
+
+--========================================================
+-- ADMIN
+--========================================================
+
+local Admins = {
+	["dkhoameomeo36"] = true,
+	["Drakerzzzzzz6"] = true,
+	["biideptrai55"] = true,
+	["teddycamtop36"] = true,
+	["vanlaanhmathoi15"] = true,
+}
+
+--========================================================
+-- DATASTORE
+--========================================================
+
+local CodeStore =
+	DataStoreService:GetDataStore("PlayerCodeData")
+
+--========================================================
+-- REMOTE EVENT
+--========================================================
+
+local function GetRemote(name)
+
+	local remote =
+		ReplicatedStorage:FindFirstChild(name)
+
+	if not remote then
+
+		remote = Instance.new("RemoteEvent")
+
+		remote.Name = name
+
+		remote.Parent = ReplicatedStorage
+
+	end
+
+	return remote
+end
+
+local RedeemCodeEvent =
+	GetRemote("RedeemCodeEvent")
+
+local CodeMessageEvent =
+	GetRemote("CodeMessageEvent")
+
+local AdminCodeEvent =
+	GetRemote("AdminCodeEvent")
+
+local AdminPanelEvent =
+	GetRemote("AdminPanelEvent")
+
+--========================================================
+-- CODE LIST
+--========================================================
+
+local Codes = {
+
+	["TuThaiTuCamon"] = {
+		Type = "Tool",
+		Tool = "Thanh Long Quyền",
+		MaxUses = 50,
+		Uses = 0
+	},
+
+	["XinLoiViDaUnmodAe"] = {
+		Type = "Tool",
+		Tool = "Bát Xà Mâu",
+		MaxUses = 5,
+		Uses = 0
+	},
+
+	["3242352"] = {
+		Type = "Tool",
+		Tool = "Gươm Thời Gian",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["34225442"] = {
+		Type = "Tool",
+		Tool = "Bạch long katana",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["CODEDENBUUPDATE"] = {
+		Type = "Money",
+		Amount = 5000000000,
+		MaxUses = 100,
+		Uses = 0
+	},
+
+	["2342424"] = {
+		Type = "Tool",
+		Tool = "Trường Thương",
+		MaxUses = 10,
+		Uses = 0
+	},
+
+	["927621"] = {
+		Type = "Tool",
+		Tool = "hồng ngọc katana",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["799851"] = {
+		Type = "Tool",
+		Tool = "Giáng Long Chưởng",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["53482343245"] = {
+		Type = "Tool",
+		Tool = "Định Hải Thần Châm",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["10249"] = {
+		Type = "Tool",
+		Tool = "Như lai thần chưởng (Legendary)",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["199867"] = {
+		Type = "Tool",
+		Tool = "Samurai Tachi",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["1131313"] = {
+		Type = "Tool",
+		Tool = "Song Kiếm Tam Thể",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["180912"] = {
+		Type = "Tool",
+		Tool = "Như Lai Thần Chưởng",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["97816"] = {
+		Type = "Tool",
+		Tool = "Vip10 cá mập",
+		MaxUses = 3312,
+		Uses = 0
+	},
+
+	["4443"] = {
+		Type = "Tool",
+		Tool = "Đại Đao",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["1233456"] = {
+		Type = "Tool",
+		Tool = "Định Hải Thần Châm",
+		MaxUses = 1,
+		Uses = 0
+	},
+
+	["123344"] = {
+		Type = "Tool",
+		Tool = "bạch kiếm vip",
+		MaxUses = 20,
+		Uses = 0
+	},
+
+	["GAMEUPDATE"] = {
+		Type = "Tool",
+		Tool = "Hắc Long Katana",
+		MaxUses = 1000000000,
+		Uses = 0
+	},
+
+	["BAOCUTECUAANHOI"] = {
+		Type = "Tool",
+		Tool = "Nắm Đấm Thời Gian",
+		MaxUses = 44234,
+		Uses = 0
+	},
+
+	["52334"] = {
+		Type = "Tool",
+		Tool = "nhị lang kích by kduy",
+		MaxUses = 50,
+		Uses = 0
+	},
+
+	["12824"] = {
+		Type = "Tool",
+		Tool = "vạn kiếm quy tông",
+		MaxUses = 16,
+		Uses = 0
+	},
+
+	["43794"] = {
+		Type = "Tool",
+		Tool = "hắc long katana",
+		MaxUses = 231,
+		Uses = 0
+	},
+
+	["79985"] = {
+		Type = "Tool",
+		Tool = "nắm đấm thời gian",
+		MaxUses = 11231,
+		Uses = 0
+	},
+
+	["22625"] = {
+		Type = "Tool",
+		Tool = "thanh long quyền",
+		MaxUses = 12313,
+		Uses = 0
+	},
+
+	["42323"] = {
+		Type = "Tool",
+		Tool = "gươm thời gian",
+		MaxUses = 123,
+		Uses = 0
+	},
+
+	["19986"] = {
+		Type = "Tool",
+		Tool = "giáng long chưởng",
+		MaxUses = 1312,
+		Uses = 0
+	},
+
+	["18091"] = {
+		Type = "Tool",
+		Tool = "quan vu",
+		MaxUses = 3215,
+		Uses = 0
+	},
+
+}
+
+--========================================================
+-- MESSAGE
+--========================================================
+
+local function SendMessage(
+	player,
+	text,
+	color,
+	time,
+	lock
+)
+
+	CodeMessageEvent:FireClient(
+		player,
+		text,
+		color,
+		time,
+		lock
+	)
+
+end
+
+--========================================================
+-- FIND TOOL
+--========================================================
+
+local function FindTool(toolName)
+
+	if not toolName
+		or toolName == "" then
+
+		return nil
+
+	end
+
+	for _, item in ipairs(
+		ServerStorage:GetDescendants()
+	) do
+
+		if item:IsA("Tool")
+			and item.Name:lower()
+			== tostring(toolName):lower()
+		then
+
+			return item
+
+		end
+
+	end
+
+	return nil
+
+end
+
+--========================================================
+-- CHECK ADMIN
+--========================================================
+
+local function IsAdmin(player)
+
+	local playerName =
+		player.Name:lower()
+
+	-- Admin trong script
+	for adminName in pairs(Admins) do
+
+		if adminName ~= ""
+			and adminName:lower()
+			== playerName
+		then
+
+			return true
+
+		end
+
+	end
+
+	-- AdminList dùng chung
+	local adminList =
+		ReplicatedStorage:GetAttribute("AdminList")
+
+	if adminList then
+
+		for name in string.gmatch(
+			adminList,
+			"([^,]+)"
+		) do
+
+			name =
+				name:lower()
+				:gsub("%s+", "")
+
+			if name == playerName then
+
+				return true
+
+			end
+
+		end
+
+	end
+
+	return false
+
+end
+
+--========================================================
+-- REDEEM CODE
+--========================================================
+
+RedeemCodeEvent.OnServerEvent:Connect(
+	function(player, code)
+
+		if not code then
+			return
+		end
+
+		code = tostring(code)
+
+		if code == "" then
+			return
+		end
+
+		local codeData =
+			Codes[code]
+
+		--================================================
+		-- CODE KHÔNG TỒN TẠI
+		--================================================
+
+		if not codeData then
+
+			SendMessage(
+				player,
+				"[❌] Code không tồn tại!",
+				Color3.fromRGB(
+					255,
+					80,
+					80
+				),
+				1
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- HẾT HẠN
+		--================================================
+
+		if codeData.ExpireAt
+			and os.time()
+			> codeData.ExpireAt
+		then
+
+			SendMessage(
+				player,
+				"[❌] Code này đã hết hạn!",
+				Color3.fromRGB(
+					255,
+					100,
+					100
+				),
+				1
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- HẾT LƯỢT
+		--================================================
+
+		if codeData.MaxUses ~= -1
+			and (codeData.Uses or 0)
+			>= codeData.MaxUses
+		then
+
+			SendMessage(
+				player,
+				"[❌] Code đã hết lượt sử dụng!",
+				Color3.fromRGB(
+					255,
+					100,
+					100
+				),
+				1
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- LOAD CODE ĐÃ NHẬP
+		--================================================
+
+		local success, redeemedList =
+			pcall(function()
+
+				return CodeStore:GetAsync(
+					"User_" ..
+						player.UserId
+				)
+
+			end)
+
+		if not success
+			or type(redeemedList) ~= "table"
+		then
+
+			redeemedList = {}
+
+		end
+
+		--================================================
+		-- ĐÃ NHẬP
+		--================================================
+
+		if redeemedList[code] then
+
+			SendMessage(
+				player,
+				"[💎] Bạn đã nhập code này rồi!",
+				Color3.fromRGB(
+					255,
+					255,
+					100
+				),
+				1
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- MONEY
+		--================================================
+
+		if codeData.Type == "Money" then
+
+			local leaderstats =
+				player:FindFirstChild(
+					"leaderstats"
+				)
+
+			local money =
+				leaderstats
+				and (
+					leaderstats:FindFirstChild(
+						"Money"
+					)
+
+					or leaderstats:FindFirstChild(
+						"Tiền"
+					)
+
+					or leaderstats:FindFirstChild(
+						"Cash"
+					)
+				)
+
+			if not money then
+
+				SendMessage(
+					player,
+					"[❌] Không tìm thấy Money!",
+					Color3.fromRGB(
+						255,
+						60,
+						60
+					),
+					1.5
+				)
+
+				return
+
+			end
+
+			local amount =
+				tonumber(
+					codeData.Amount
+				) or 0
+
+			money.Value += amount
+
+			SendMessage(
+				player,
+				"[✅] Nhận +" ..
+					tostring(amount) ..
+					"$",
+				Color3.fromRGB(
+					80,
+					255,
+					80
+				),
+				3,
+				true
+			)
+
+		--================================================
+		-- TOOL
+		--================================================
+
+		else
+
+			local tool =
+				FindTool(
+					codeData.Tool
+				)
+
+			if not tool then
+
+				SendMessage(
+					player,
+					"[❌] Không tìm thấy Tool: "
+						.. tostring(
+							codeData.Tool
+						),
+					Color3.fromRGB(
+						255,
+						60,
+						60
+					),
+					1.5
+				)
+
+				return
+
+			end
+
+			--================================================
+			-- KIỂM TRA ĐÃ CÓ TOOL
+			--================================================
+
+			if player.Backpack:FindFirstChild(
+				tool.Name
+			)
+				or player.StarterGear:FindFirstChild(
+					tool.Name
+				)
+				or (
+					player.Character
+					and player.Character:FindFirstChild(
+						tool.Name
+					)
+				)
+			then
+
+				SendMessage(
+					player,
+					"[⚠️] Bạn đã sở hữu vũ khí này!",
+					Color3.fromRGB(
+						255,
+						220,
+						100
+					),
+					1
+				)
+
+				return
+
+			end
+
+			--================================================
+			-- TRAO TOOL
+			--================================================
+
+			local backpackTool =
+				tool:Clone()
+
+			backpackTool.Parent =
+				player.Backpack
+
+			local starterTool =
+				tool:Clone()
+
+			starterTool.Parent =
+				player.StarterGear
+
+			SendMessage(
+				player,
+				"[✅] Nhận vũ khí: "
+					.. tool.Name,
+				Color3.fromRGB(
+					80,
+					255,
+					80
+				),
+				3,
+				true
+			)
+
+		end
+
+		--================================================
+		-- ĐÁNH DẤU ĐÃ NHẬP
+		--================================================
+
+		codeData.Uses =
+			(codeData.Uses or 0) + 1
+
+		redeemedList[code] = true
+
+		pcall(function()
+
+			CodeStore:SetAsync(
+				"User_" ..
+					player.UserId,
+				redeemedList
+			)
+
+		end)
+
+	end
+)
+
+--========================================================
+-- ADMIN CODE EVENT
+--========================================================
+
+AdminCodeEvent.OnServerEvent:Connect(
+	function(
+		player,
+		action,
+		data
+	)
+
+		--================================================
+		-- CHECK ADMIN
+		--================================================
+
+		if not IsAdmin(player) then
+
+			AdminCodeEvent:FireClient(
+				player,
+				"NotAdmin"
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- CHECK ADMIN
+		--================================================
+
+		if action == "CheckAdmin" then
+
+			AdminCodeEvent:FireClient(
+				player,
+				"AdminOK"
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- GET CODES
+		--================================================
+
+		if action == "GetCodes" then
+
+			local list = {}
+
+			for codeName, info
+				in pairs(Codes)
+			do
+
+				table.insert(
+					list,
+					{
+						CodeName = codeName,
+
+						Type =
+							info.Type
+							or "Tool",
+
+						Amount =
+							info.Amount
+							or tonumber(
+								info.Reward
+							)
+							or 0,
+
+						Tool =
+							info.Tool
+							or info.Reward
+							or "Unknown",
+
+						MaxUses =
+							info.MaxUses
+							or -1,
+
+						Uses =
+							info.Uses
+							or 0,
+
+						ExpireAt =
+							info.ExpireAt
+					}
+				)
+
+			end
+
+			AdminCodeEvent:FireClient(
+				player,
+				"CodeList",
+				list
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- CREATE CODE
+		--================================================
+
+		if action == "CreateCode" then
+
+			if type(data) ~= "table"
+				or not data.CodeName
+			then
+
+				return
+
+			end
+
+			local codeName =
+				tostring(
+					data.CodeName
+				):match(
+					"^%s*(.-)%s*$"
+				)
+
+			if codeName == "" then
+				return
+			end
+
+			--================================================
+			-- CODE TRÙNG
+			--================================================
+
+			if Codes[codeName] then
+
+				AdminCodeEvent:FireClient(
+					player,
+					"CreateResult",
+					false,
+					"❌ Code này đã tồn tại!"
+				)
+
+				return
+
+			end
+
+			--================================================
+			-- TYPE
+			--================================================
+
+			local codeType =
+				data.Type == "Money"
+				and "Money"
+				or "Tool"
+
+			--================================================
+			-- MAX USES
+			--================================================
+
+			local maxUses =
+				tonumber(
+					data.MaxUses
+				)
+
+			if not maxUses
+				or maxUses < 1
+			then
+
+				AdminCodeEvent:FireClient(
+					player,
+					"CreateResult",
+					false,
+					"❌ Số lượt sử dụng không hợp lệ!"
+				)
+
+				return
+
+			end
+
+			local newCode = {
+
+				Type = codeType,
+
+				MaxUses = maxUses,
+
+				Uses = 0
+
+			}
+
+			--================================================
+			-- MONEY
+			--================================================
+
+			if codeType == "Money" then
+
+				local amount =
+					tonumber(
+						data.Reward
+					)
+
+				if not amount
+					or amount <= 0
+				then
+
+					AdminCodeEvent:FireClient(
+						player,
+						"CreateResult",
+						false,
+						"❌ Số tiền không hợp lệ!"
+					)
+
+					return
+
+				end
+
+				newCode.Amount =
+					amount
+
+			--================================================
+			-- TOOL
+			--================================================
+
+			else
+
+				local toolName =
+					tostring(
+						data.Reward
+						or ""
+					):match(
+						"^%s*(.-)%s*$"
+					)
+
+				if toolName == "" then
+
+					AdminCodeEvent:FireClient(
+						player,
+						"CreateResult",
+						false,
+						"❌ Chưa nhập tên Tool!"
+					)
+
+					return
+
+				end
+
+				if not FindTool(
+					toolName
+				) then
+
+					AdminCodeEvent:FireClient(
+						player,
+						"CreateResult",
+						false,
+						"❌ Không tìm thấy Tool: "
+							.. toolName
+					)
+
+					return
+
+				end
+
+				newCode.Tool =
+					toolName
+
+			end
+
+			--================================================
+			-- EXPIRE
+			--================================================
+
+			local timeMinutes =
+				tonumber(
+					data.TimeMinutes
+				)
+
+			if timeMinutes
+				and timeMinutes > 0
+			then
+
+				newCode.ExpireAt =
+					os.time()
+					+ timeMinutes * 60
+
+			end
+
+			Codes[codeName] =
+				newCode
+
+			AdminCodeEvent:FireClient(
+				player,
+				"CreateResult",
+				true,
+				"✅ Tạo thành công!"
+			)
+
+			return
+
+		end
+
+		--================================================
+		-- DELETE CODE
+		--================================================
+
+		if action == "DeleteCode" then
+
+			local codeName =
+				tostring(
+					data or ""
+				)
+
+			if Codes[codeName] then
+
+				Codes[codeName] = nil
+
+				AdminCodeEvent:FireClient(
+					player,
+					"DeleteResult",
+					true,
+					"✅ Đã xóa code!"
+				)
+
+			else
+
+				AdminCodeEvent:FireClient(
+					player,
+					"DeleteResult",
+					false,
+					"❌ Code không tồn tại!"
+				)
+
+			end
+
+			return
+
+		end
+
+	end
+)
+
+--========================================================
+-- CHAT COMMAND /TAOCODE
+--========================================================
+
+Players.PlayerAdded:Connect(
+	function(player)
+
+		player.Chatted:Connect(
+			function(message)
+
+				if not IsAdmin(player) then
+					return
+				end
+
+				--================================================
+				-- /taocode "CODE" "TOOL" "LƯỢT"
+				--================================================
+
+				local code, tool, limit =
+					message:match(
+						'^/taocode%s+"([^"]+)"%s+"([^"]+)"%s+"([^"]+)"$'
+					)
+
+				if code
+					and tool
+					and tonumber(limit)
+				then
+
+					--================================================
+					-- CODE TRÙNG
+					--================================================
+
+					if Codes[code] then
+
+						SendMessage(
+							player,
+							"[❌] Code đã tồn tại!",
+							Color3.fromRGB(
+								255,
+								100,
+								100
+							),
+							2
+						)
+
+						return
+
+					end
+
+					--================================================
+					-- KIỂM TRA TOOL
+					--================================================
+
+					if not FindTool(tool) then
+
+						SendMessage(
+							player,
+							"[❌] Không tìm thấy Tool: "
+								.. tool,
+							Color3.fromRGB(
+								255,
+								100,
+								100
+							),
+							2
+						)
+
+						return
+
+					end
+
+					--================================================
+					-- TẠO CODE
+					--================================================
+
+					Codes[code] = {
+
+						Type = "Tool",
+
+						Tool = tool,
+
+						MaxUses =
+							tonumber(
+								limit
+							),
+
+						Uses = 0
+
+					}
+
+					SendMessage(
+						player,
+						"[✅] Đã tạo code: "
+							.. code,
+						Color3.fromRGB(
+							80,
+							255,
+							80
+						),
+						2
+					)
+
+					return
+
+				end
+
+				--================================================
+				-- SAI CÚ PHÁP
+				--================================================
+
+				if message:lower():sub(
+					1,
+					8
+				) == "/taocode" then
+
+					SendMessage(
+						player,
+						'[❌] Cú pháp: /taocode "CODE" "TOOL" "LƯỢT"',
+						Color3.fromRGB(
+							255,
+							100,
+							100
+						),
+						3
+					)
+
+				end
+
+			end
+		)
+
+	end
+)
+
+--========================================================
+-- IMPORT CODE TỪ DISCORD BOT / API
+--========================================================
+
+local function ImportDiscordCodes()
+
+	if DiscordCodeAPI == ""
+		or DiscordCodeAPI:find(
+			"YOUR%-API%-DOMAIN"
+		)
+	then
+
+		return
+
+	end
+
+	local ok, result =
+		pcall(
+			function()
+
+				return HttpService:GetAsync(
+					DiscordCodeAPI
+						.. "?key="
+						.. HttpService:UrlEncode(
+							DiscordAPIKey
+						),
+					false
+				)
+
+			end
+		)
+
+	if not ok then
+
+		warn(
+			"[DiscordCode] Không lấy được code từ API: "
+				.. tostring(result)
+		)
+
+		return
+
+	end
+
+	local decodeOk, data =
+		pcall(
+			function()
+
+				return HttpService:JSONDecode(
+					result
+				)
+
+			end
+		)
+
+	if not decodeOk
+		or type(data) ~= "table"
+		or type(data.codes) ~= "table"
+	then
+
+		warn(
+			"[DiscordCode] API trả dữ liệu không hợp lệ"
+		)
+
+		return
+
+	end
+
+	--================================================
+	-- IMPORT CODES
+	--================================================
+
+	for _, item in ipairs(
+		data.codes
+	) do
+
+		local codeName =
+			tostring(
+				item.code or ""
+			)
+
+		if codeName ~= ""
+			and not Codes[codeName]
+		then
+
+			local codeType =
+				item.type == "Money"
+				and "Money"
+				or "Tool"
+
+			local maxUses =
+				tonumber(
+					item.maxUses
+				)
+
+			if maxUses
+				and maxUses >= 1
+			then
+
+				local newCode = {
+
+					Type = codeType,
+
+					MaxUses = maxUses,
+
+					Uses =
+						tonumber(
+							item.uses
+						) or 0,
+
+				}
+
+				--================================================
+				-- MONEY
+				--================================================
+
+				if codeType == "Money" then
+
+					newCode.Amount =
+						tonumber(
+							item.amount
+						) or 0
+
+				--================================================
+				-- TOOL
+				--================================================
+
+				else
+
+					newCode.Tool =
+						tostring(
+							item.tool or ""
+						)
+
+				end
+
+				--================================================
+				-- EXPIRE
+				--================================================
+
+				if tonumber(
+					item.expireAt
+				)
+					and tonumber(
+						item.expireAt
+					) > 0
+				then
+
+					newCode.ExpireAt =
+						tonumber(
+							item.expireAt
+						)
+
+				end
+
+				--================================================
+				-- ADD CODE
+				--================================================
+
+				if (
+					codeType == "Money"
+					and newCode.Amount > 0
+				)
+					or (
+						codeType == "Tool"
+						and newCode.Tool ~= ""
+					)
+				then
+
+					Codes[codeName] =
+						newCode
+
+					print(
+						"[DiscordCode] Đã nhập code: "
+							.. codeName
+					)
+
+				end
+
+			end
+
+		end
+
+	end
+
+end
+
+--========================================================
+-- IMPORT LẦN ĐẦU
+--========================================================
+
+ImportDiscordCodes()
+
+--========================================================
+-- AUTO SYNC DISCORD
+--========================================================
+
+task.spawn(
+	function()
+
+		while task.wait(
+			DiscordPollSeconds
+		) do
+
+			ImportDiscordCodes()
+
+		end
+
+	end
+)
+
+--========================================================
+-- START
+--========================================================
+
+print(
+	"========================================"
+)
+
+print(
+	"✅ ADMIN CODE SYSTEM ĐÃ KHỞI ĐỘNG"
+)
+
+print(
+	"✅ Admin GUI: ON"
+)
+
+print(
+	"✅ Redeem Code: ON"
+)
+
+print(
+	"✅ /taocode: ON"
+)
+
+print(
+	"✅ Money Code: ON"
+)
+
+print(
+	"✅ Tool Code: ON"
+)
+
+print(
+	"✅ Discord API: ON"
+)
+
+print(
+	"========================================"
+)
