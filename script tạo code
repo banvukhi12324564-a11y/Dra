@@ -1,0 +1,214 @@
+--==================================================
+-- TAO CODE - 5 ADMIN
+-- Đặt trong ServerScriptService
+--==================================================
+
+local Players = game:GetService("Players")
+local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+--==================================================
+-- 5 ADMIN
+--==================================================
+
+local Admins = {
+	["dkhoameomeo36"] = true,
+	["Drakerzzzzzz6"] = true,
+	["biideptrai55"] = true,
+	["teddycamtop36"] = true,
+	["vanlaanhmathoi15"] = true,
+}
+
+--==================================================
+-- DANH SÁCH CODE
+--==================================================
+
+local Codes = {}
+
+--==================================================
+-- KIỂM TRA ADMIN
+--==================================================
+
+local function IsAdmin(player)
+	return Admins[player.Name] == true
+end
+
+--==================================================
+-- TÌM TOOL
+--==================================================
+
+local function FindTool(toolName)
+
+	for _, object in ipairs(ServerStorage:GetDescendants()) do
+
+		if object:IsA("Tool") then
+
+			if object.Name:lower() == toolName:lower() then
+				return object
+			end
+
+		end
+
+	end
+
+	return nil
+end
+
+--==================================================
+-- TẠO CODE
+--
+-- /taocode CODE Tên Tool SốLượt
+--
+-- Ví dụ:
+-- /taocode VIP100 Samurai Tachi 100
+--
+-- Money:
+-- /taocode TIEN100 Money 1000000 50
+--==================================================
+
+local function CreateCode(player, message)
+
+	if not IsAdmin(player) then
+		return
+	end
+
+	local args = string.split(message, " ")
+
+	-- bỏ /taocode
+	table.remove(args, 1)
+
+	if #args < 3 then
+		warn(
+			"[CODE] Cách dùng: /taocode CODE TênTool SốLượt"
+		)
+		return
+	end
+
+	local codeName = args[1]
+
+	-- Lượt nằm ở cuối
+	local maxUses = tonumber(args[#args])
+
+	if not maxUses then
+		warn("[CODE] Số lượt không hợp lệ!")
+		return
+	end
+
+	if maxUses < 1 then
+		warn("[CODE] Số lượt phải lớn hơn 0!")
+		return
+	end
+
+	-- Phần thưởng nằm giữa CODE và Số lượt
+	table.remove(args, 1)
+	table.remove(args, #args)
+
+	local reward = table.concat(args, " ")
+
+	if reward == "" then
+		warn("[CODE] Chưa nhập phần thưởng!")
+		return
+	end
+
+	-- Code đã tồn tại
+	for oldCode in pairs(Codes) do
+
+		if oldCode:lower() == codeName:lower() then
+			warn("[CODE] Code đã tồn tại!")
+			return
+		end
+
+	end
+
+	--==================================================
+	-- MONEY
+	--==================================================
+
+	if reward:lower() == "money" then
+
+		warn(
+			"[CODE] Với Money hãy dùng hệ thống GUI/API riêng để chỉ định số tiền."
+		)
+
+		return
+	end
+
+	--==================================================
+	-- KIỂM TRA TOOL
+	--==================================================
+
+	local tool = FindTool(reward)
+
+	if not tool then
+
+		warn(
+			"[CODE] Không tìm thấy Tool: " .. reward
+		)
+
+		return
+	end
+
+	--==================================================
+	-- LƯU CODE
+	--==================================================
+
+	Codes[codeName] = {
+		Type = "Tool",
+		Tool = reward,
+		MaxUses = maxUses,
+		Uses = 0,
+		CreatedBy = player.Name,
+	}
+
+	print("================================")
+	print("✅ TẠO CODE THÀNH CÔNG")
+	print("Code:", codeName)
+	print("Tool:", reward)
+	print("Lượt:", maxUses)
+	print("Admin:", player.Name)
+	print("================================")
+
+end
+
+--==================================================
+-- CHAT COMMAND
+--==================================================
+
+local function SetupPlayer(player)
+
+	player.Chatted:Connect(function(message)
+
+		if message:sub(1, 9):lower() == "/taocode " then
+
+			CreateCode(player, message)
+
+		elseif message:lower() == "/taocode" then
+
+			if IsAdmin(player) then
+
+				print(
+					"[CODE] Cách dùng: /taocode CODE TênTool SốLượt"
+				)
+
+			end
+
+		end
+
+	end)
+
+end
+
+Players.PlayerAdded:Connect(SetupPlayer)
+
+for _, player in ipairs(Players:GetPlayers()) do
+	SetupPlayer(player)
+end
+
+--==================================================
+-- KIỂM TRA
+--==================================================
+
+print("================================")
+print("✅ HỆ THỐNG TẠO CODE ĐÃ BẬT")
+print("✅ 5 ADMIN ĐƯỢC PHÉP TẠO CODE")
+print("================================")
